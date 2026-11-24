@@ -1,0 +1,129 @@
+<template>
+    <div class="chat-container">
+        <!-- Header -->
+        <div class="chat-header">
+            <div class="header-content">
+                <lightning-icon icon-name="custom:custom14" size="small"></lightning-icon>
+                <h2 class="header-title">AI Shopping Assistant</h2>
+            </div>
+            <lightning-button-icon
+                icon-name="utility:refresh"
+                variant="bare"
+                alternative-text="Reset conversation"
+                onclick={handleReset}
+            ></lightning-button-icon>
+        </div>
+
+        <!-- Messages Container -->
+        <div class="messages-container">
+            <!-- Loading State -->
+            <template if:true={isLoading}>
+                <div class="loading-container">
+                    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                </div>
+            </template>
+
+            <!-- Messages List -->
+            <template for:each={messages} for:item="msg">
+                <div key={msg.id} class={msg.cssClass}>
+                    <div class="message-content">
+                        <div class="message-header">
+                            <span class="message-sender">{msg.sender}</span>
+                            <span class="message-time">{msg.time}</span>
+                        </div>
+                        <div class="message-text">
+                            <lightning-formatted-rich-text value={msg.text}></lightning-formatted-rich-text>
+                        </div>
+                        
+                        <!-- Product Cards (if any) -->
+                        <template if:true={msg.products}>
+                            <template if:true={msg.products.length}>
+                                <div class="products-grid">
+                                    <template for:each={msg.products} for:item="product">
+                                        <div key={product.Id} class="product-card">
+                                            <template if:true={product.Picture_URL__c}>
+                                                <img src={product.Picture_URL__c} alt={product.Name} class="product-image" />
+                                            </template>
+                                            <div class="product-info">
+                                                <h3 class="product-name">{product.Name}</h3>
+                                                <p class="product-price">${product.MSRP__c}</p>
+                                                <template if:true={product.Level__c}>
+                                                    <p class="product-level">Level: {product.Level__c}</p>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Welcome Message (when no messages and not loading) -->
+            <template if:false={hasMessages}>
+                <template if:false={isLoading}>
+                    <div class="welcome-message">
+                        <lightning-icon icon-name="utility:chat" size="large"></lightning-icon>
+                        <h3>Welcome to E-Bikes!</h3>
+                        <p>I'm your AI shopping assistant. Ask me anything about our electric bikes!</p>
+                        <div class="suggestion-chips">
+                            <lightning-button 
+                                label="Show bikes under $3000" 
+                                onclick={handleSuggestion}
+                                data-message="Show me bikes under $3000"
+                                variant="neutral"
+                            ></lightning-button>
+                            <lightning-button 
+                                label="Best for commuting" 
+                                onclick={handleSuggestion}
+                                data-message="What's the best bike for daily commuting?"
+                                variant="neutral"
+                            ></lightning-button>
+                            <lightning-button 
+                                label="Beginner friendly" 
+                                onclick={handleSuggestion}
+                                data-message="Show me beginner friendly bikes"
+                                variant="neutral"
+                            ></lightning-button>
+                        </div>
+                    </div>
+                </template>
+            </template>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-container">
+            <lightning-input
+                type="text"
+                placeholder="Ask me about bikes..."
+                value={userInput}
+                onchange={handleInputChange}
+                onkeyup={handleKeyPress}
+                disabled={isLoading}
+                class="chat-input"
+            ></lightning-input>
+            <lightning-button
+                label="Send"
+                onclick={handleSend}
+                disabled={isSendDisabled}
+                variant="brand"
+                class="send-button"
+            ></lightning-button>
+        </div>
+
+        <!-- Error Toast -->
+        <template if:true={errorMessage}>
+            <div class="error-toast">
+                <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                <span>{errorMessage}</span>
+                <lightning-button-icon
+                    icon-name="utility:close"
+                    variant="bare"
+                    alternative-text="Close"
+                    onclick={handleCloseError}
+                ></lightning-button-icon>
+            </div>
+        </template>
+    </div>
+</template>
